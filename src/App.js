@@ -1,23 +1,27 @@
-import logo from './logo.svg';
+import { BrowserRouter as Router, Route, Switch }from 'react-router-dom';
+import { makeStyles } from "@material-ui/core/styles";
+import { createBrowserHistory } from 'history';
+import Home from './components/Home';
 import './App.css';
 
+const customHistory = createBrowserHistory();
+
+const useStyles = makeStyles((theme) => ({
+  app: {}
+}));
+
 function App() {
+  const classes = useStyles();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className={classes.app}>
+      <Router history={customHistory}>
+        <Switch>
+          <Route exact path="/">
+              <Home />
+            </Route>
+        </Switch>
+      </Router>
     </div>
   );
 }
