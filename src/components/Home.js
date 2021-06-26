@@ -18,6 +18,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import HomeIcon from '@material-ui/icons/Home';
 import MailIcon from '@material-ui/icons/Mail';
 import Export from './Export';
+import Table from './Table';
 import momentiveLogo from '../assets/images/momentive-logo.png';
 
 const drawerWidth = 240;
@@ -157,6 +158,7 @@ export default function MiniDrawer() {
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <Export />
+        <Table />
       </main>
     </div>
   );
