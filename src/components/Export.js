@@ -12,7 +12,9 @@ import {
     Checkbox,
     ListItemText,
     Input,
-    TextField
+    TextField,
+    Backdrop,
+    CircularProgress
 } from '@material-ui/core';
 import { CSVLink } from "react-csv";
 
@@ -35,7 +37,11 @@ const useStyles = makeStyles((theme) => ({
     exportGrid: {
         display: 'flex',
         justifyContent: 'flex-end'
-    }
+    },
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    },   
 }));
 
 const ITEM_HEIGHT = 48;
@@ -82,6 +88,7 @@ export default function Export() {
     const [websites, setWebsites] = useState([]);
     const [dataSize, setDataSize] = useState(null);
     const [data, setData] = useState([]);
+    const [open, setOpen] = React.useState(true);
 
     const handleNameChange = (e) => setSelectedName(e.target.value);
     const handleUsernameChange = (e) => setSelectedUsername(e.target.value);
@@ -94,9 +101,14 @@ export default function Export() {
 
     const callAPIs = async () => {
         const data = await getUserList();
-        setData(data);
-        setListOfUsers(data.map(item => item.name));
-        setListOfWebsites(data.map(item => item.website));
+        setTimeout(() => {
+            setOpen(false);
+            setData(data);
+            setListOfUsers(data.map(item => item.name));
+            const allData = data.map(item => item.website)
+            // allData.unshift("All");
+            setListOfWebsites(allData);
+        }, 1000);
     }
 
     const getUserList = () => {
@@ -110,20 +122,28 @@ export default function Export() {
             const slicedArray = data.slice(0, dataSize);
             console.table(slicedArray);
             setData(slicedArray);
+            setOpen(true);
             setTimeout(() => {
                 csvLinkEl.current.link.click();
-            });
+                setOpen(false);
+            },1000);
         } else {
             console.table(data);
             setData(data);
+            setOpen(true);
             setTimeout(() => {
                 csvLinkEl.current.link.click();
-            });
+                setOpen(false);
+            },1000);
         }
     }
 
     return (
         <Grid>
+            <Backdrop className={classes.backdrop} open={open}>
+                <CircularProgress color="inherit" />
+            </Backdrop>
+
             <Paper className={classes.paper}>
                 <Grid className={classes.formGrid}>
 
