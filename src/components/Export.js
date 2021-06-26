@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { makeStyles } from "@material-ui/core/styles";
 import Button from '@material-ui/core/Button';
 import {
@@ -14,6 +14,7 @@ import {
     Input,
     TextField
 } from '@material-ui/core';
+import { CSVLink } from "react-csv";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -30,6 +31,10 @@ const useStyles = makeStyles((theme) => ({
             display: 'flex',
             flexDirection: 'column'
         }
+    },
+    exportGrid: {
+        display: 'flex',
+        justifyContent: 'flex-end'
     }
 }));
 
@@ -44,30 +49,78 @@ const MenuProps = {
     },
 };
 
-const names = [
-    'Oliver Hansen',
-    'Van Henry',
-    'April Tucker',
-    'Ralph Hubbard',
-    'Omar Alexander',
-    'Carlos Abbott',
-    'Miriam Wagner',
-    'Bradley Wilkerson',
-    'Virginia Andrews',
-    'Kelly Snyder',
+/**
+    const listOfUsers = [
+        'Oliver Hansen',
+        'Van Henry',
+        'April Tucker',
+        'Ralph Hubbard',
+        'Omar Alexander',
+        'Carlos Abbott',
+        'Miriam Wagner',
+        'Bradley Wilkerson',
+        'Virginia Andrews',
+        'Kelly Snyder',
+    ];
+*/
+
+const headers = [
+    { label: "Name", key: "name" },
+    { label: "Username", key: "username" },
+    { label: "Email", key: "email" },
+    { label: "Phone", key: "phone" },
+    { label: "Website", key: "website" }
 ];
 
 export default function Export() {
+    const csvLinkEl = useRef();
     const classes = useStyles();
-    const [call, setCall] = useState("");
-    const [gender, setGender] = useState("");
-    const [personName, setPersonName] = useState([]);
-    const [numberOfChildrens, setNumberOfChildrens] = useState(null);
+    const [selectedName, setSelectedName] = useState("");
+    const [selectedUsername, setSelectedUsername] = useState("");
+    const [listOfUsers, setListOfUsers] = useState([])
+    const [listOfWebsites, setListOfWebsites] = useState([]);
+    const [websites, setWebsites] = useState([]);
+    const [dataSize, setDataSize] = useState(null);
+    const [data, setData] = useState([]);
 
-    const handleChange = (e) => setCall(e.target.value);
-    const handleGenderChange = (e) => setGender(e.target.value);
-    const handlePersonNameChange = (e) => setPersonName(e.target.value);
-    const handleNumberOfChildrens = (e) => setNumberOfChildrens(e.target.value);
+    const handleNameChange = (e) => setSelectedName(e.target.value);
+    const handleUsernameChange = (e) => setSelectedUsername(e.target.value);
+    const handleWebsites = (e) => setWebsites(e.target.value);
+    const handleDataSize = (e) => setDataSize(e.target.value >= 1 ? e.target.value : null);
+
+    useEffect(() => {
+        callAPIs();
+    }, []);
+
+    const callAPIs = async () => {
+        const data = await getUserList();
+        setData(data);
+        setListOfUsers(data.map(item => item.name));
+        setListOfWebsites(data.map(item => item.website));
+    }
+
+    const getUserList = () => {
+        return fetch('https://jsonplaceholder.typicode.com/users')
+            .then(res => res.json());
+    }
+     
+    const downloadReport = async () => {
+        const data = await getUserList();
+        if(dataSize >= 1) {
+            const slicedArray = data.slice(0, dataSize);
+            console.table(slicedArray);
+            setData(slicedArray);
+            setTimeout(() => {
+                csvLinkEl.current.link.click();
+            });
+        } else {
+            console.table(data);
+            setData(data);
+            setTimeout(() => {
+                csvLinkEl.current.link.click();
+            });
+        }
+    }
 
     return (
         <Grid>
@@ -75,67 +128,69 @@ export default function Export() {
                 <Grid className={classes.formGrid}>
 
                     <FormControl className={classes.formControl}>
-                        <InputLabel id="demo-simple-select-helper-label">Call</InputLabel>
+                        <InputLabel id="demo-simple-select-helper-label">Select Name</InputLabel>
                         <Select
                             labelId="demo-simple-select-helper-label"
                             id="demo-simple-select-helper"
-                            value={call}
-                            onChange={handleChange}
+                            value={selectedName}
+                            onChange={handleNameChange}
                         >
                             <MenuItem value="">
                                 <em>None</em>
                             </MenuItem>
-                            <MenuItem value={"Mr."}>Mr.</MenuItem>
-                            <MenuItem value={"Mrs."}>Mrs.</MenuItem>
+                            {listOfUsers.map((name, index) => {
+                                return <MenuItem key={index} value={name}>{name}</MenuItem>
+                            })}
                         </Select>
-                        <FormHelperText>Select Call</FormHelperText>
+                        <FormHelperText>Select Name</FormHelperText>
                     </FormControl>
 
                     <FormControl className={classes.formControl}>
-                        <InputLabel id="demo-simple-select-helper-label">Gender</InputLabel>
+                        <InputLabel id="demo-simple-select-helper-label">Select Username</InputLabel>
                         <Select
                             labelId="demo-simple-select-helper-label"
                             id="demo-simple-select-helper"
-                            value={gender}
-                            onChange={handleGenderChange}
+                            value={selectedUsername}
+                            onChange={handleUsernameChange}
                         >
                             <MenuItem value="">
                                 <em>None</em>
                             </MenuItem>
-                            <MenuItem value={"Male"}>Male</MenuItem>
-                            <MenuItem value={"Female"}>Female</MenuItem>
+                            {data.filter(item => item.name === selectedName).map((item, index) => {
+                                return <MenuItem key={index} value={item.username}>{item.username}</MenuItem>
+                            })}
                         </Select>
-                        <FormHelperText>Select Gender</FormHelperText>
+                        <FormHelperText>Select Username</FormHelperText>
                     </FormControl>
 
                     <FormControl className={classes.formControl}>
-                        <InputLabel id="demo-mutiple-checkbox-label">Users</InputLabel>
+                        <InputLabel id="demo-mutiple-checkbox-label">Select Websites</InputLabel>
                         <Select
                             labelId="demo-mutiple-checkbox-label"
                             id="demo-mutiple-checkbox"
                             multiple
-                            value={personName}
-                            onChange={handlePersonNameChange}
+                            value={websites}
+                            onChange={handleWebsites}
                             input={<Input />}
                             renderValue={(selected) => selected.join(', ')}
                             MenuProps={MenuProps}
                         >
-                            {names.map((name) => (
-                                <MenuItem key={name} value={name}>
-                                    <Checkbox checked={personName.indexOf(name) > -1} />
-                                    <ListItemText primary={name} />
+                            {listOfWebsites.map((website) => (
+                                <MenuItem key={website} value={website}>
+                                    <Checkbox checked={websites.indexOf(website) > -1} />
+                                    <ListItemText primary={website} />
                                 </MenuItem>
                             ))}
                         </Select>
-                        <FormHelperText>Select User</FormHelperText>
+                        <FormHelperText>Select Websites</FormHelperText>
                     </FormControl>
 
                     <TextField
                         className={classes.formControl}
                         id="standard-number"
-                        label="# Children"
+                        label="Select Data Size"
                         type="number"
-                        value={numberOfChildrens}
+                        value={dataSize}
                         InputLabelProps={{
                             shrink: true,
                         }}
@@ -144,22 +199,36 @@ export default function Export() {
                                 min: 1 
                             }
                         }}
-                        onChange={handleNumberOfChildrens}
+                        onChange={handleDataSize}
                     />
-
                 </Grid>
-                <Button variant="contained" color="primary">
-                    EXPORT
-                </Button>
 
-                <pre>
+                <Grid className={classes.exportGrid}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        type="button"
+                        value="Export to CSV (Async)"
+                        onClick={downloadReport}
+                    >
+                        EXPORT
+                    </Button>
+                    <CSVLink
+                        headers={headers}
+                        filename="MineTheBase.csv"
+                        data={data}
+                        ref={csvLinkEl}
+                    />
+                </Grid>
+
+                {/* <pre>
                     {JSON.stringify({
-                        call,
-                        gender,
-                        personName,
-                        numberOfChildrens
+                        selectedName,
+                        selectedUsername,
+                        websites,
+                        sampleSize
                     }, null, 2)}
-                </pre>
+                </pre> */}
             </Paper>
         </Grid>
     )
