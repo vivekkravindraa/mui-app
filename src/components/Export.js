@@ -97,6 +97,7 @@ export default function Export() {
 
     useEffect(() => {
         callAPIs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const callAPIs = async () => {
